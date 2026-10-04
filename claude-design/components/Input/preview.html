@@ -1,0 +1,13 @@
+<!-- @dsCard group="Forms" height=230 subtitle="label · helper · error" -->
+<div style="font-family: var(--font-sans); display: flex; flex-direction: column; gap: 18px; padding: 20px; max-width: 380px; background: var(--background); color: var(--foreground)">
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <label for="ex" style="font: 500 14px/20px var(--font-sans)">Exercise</label>
+    <input id="ex" type="search" placeholder="e.g. Romanian deadlift" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--input); border-radius: var(--radius-md); background: transparent; color: var(--foreground); font: 400 16px/24px var(--font-sans)">
+    <div style="font: 400 13px/18px var(--font-sans); color: var(--muted-foreground)">Pick from the list or type a new one.</div>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <label for="kg" style="font: 500 14px/20px var(--font-sans)">Weight (kg)</label>
+    <input id="kg" inputmode="decimal" value="-5" aria-invalid="true" style="height: 44px; box-sizing: border-box; padding: 0 12px; border: 1px solid var(--destructive); border-radius: var(--radius-md); background: transparent; color: var(--foreground); font: 400 16px/24px var(--font-sans)">
+    <div style="font: 400 13px/18px var(--font-sans); color: var(--destructive)">Weight can't be negative.</div>
+  </div>
+</div>

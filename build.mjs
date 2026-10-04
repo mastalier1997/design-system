@@ -1,8 +1,10 @@
 // Generates globals.css and the shadcn registry items in public/r/ from tokens.json,
 // after checking WCAG contrast in both modes. Run: node build.mjs
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs"
+import { dirname } from "node:path"
+import { fileURLToPath } from "node:url"
 
-process.chdir(new URL(".", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"))
+process.chdir(dirname(fileURLToPath(import.meta.url)))
 const t = JSON.parse(readFileSync("tokens.json", "utf8"))
 
 // --- Contrast check: fails the build if any pair drops below its minimum ---
@@ -173,3 +175,86 @@ for (const item of items) {
     { $schema: "https://ui.shadcn.com/schema/registry-item.json", ...item }, null, 2) + "\n")
 }
 console.log(`ok: contrast passed, wrote globals.css and ${items.length} registry items`)
+
+// --- Claude Design system tokens (claude-design/tokens.json, the Design System artifact's format) ---
+const usage = {
+  background: "Page background. App default theme is dark.",
+  foreground: "Primary text on background.",
+  card: "Cards, sheets and the sidebar surface; one step off the background.",
+  "card-foreground": "Text on card.",
+  popover: "Menus, popovers, dialogs.",
+  "popover-foreground": "Text on popover.",
+  primary: "The accent: the ONE primary action per screen, selected state, links, progress. Never decoration.",
+  "primary-foreground": "Text and icons on primary fills.",
+  secondary: "Secondary buttons, tab-list track, filled chips.",
+  "secondary-foreground": "Text on secondary.",
+  muted: "Quiet fills: skeletons, disabled areas.",
+  "muted-foreground": "Captions, helper text, inactive tabs, metadata. Passes 4.5:1 on background, card and secondary.",
+  accent: "Hover/active fill for ghost and outline controls and menu items (shadcn's accent, not the brand accent).",
+  "accent-foreground": "Text on accent.",
+  destructive: "Errors and destructive actions. As text, or as a button fill with white text (dark mode dims it to 60%).",
+  success: "Confirmation and positive status. Pair with an icon or text.",
+  border: "Card outlines and dividers. Decorative.",
+  input: "Input, select and outline-button borders; 3:1 against background.",
+  ring: "Focus ring, shown on :focus-visible only.",
+  sidebar: "Sidebar surface.",
+  "sidebar-foreground": "Text in the sidebar.",
+  "sidebar-primary": "Active sidebar item fill.",
+  "sidebar-primary-foreground": "Text on the active sidebar item.",
+  "sidebar-accent": "Sidebar hover fill.",
+  "sidebar-accent-foreground": "Text on sidebar hover.",
+  "sidebar-border": "Sidebar divider.",
+  "sidebar-ring": "Sidebar focus ring.",
+}
+for (let n = 1; n <= 5; n++) usage[`chart-${n}`] = `Chart series ${n}; 3:1 against background.`
+const missing = colorNames.filter((n) => !usage[n])
+if (missing.length) throw new Error(`add a usage note in build.mjs for: ${missing.join(", ")}`)
+
+const style = (name, s, fontWeight, sample, note) => ({
+  name, fontSize: `${parseFloat(s.size) * 16}px`, lineHeight: `${parseFloat(s["line-height"]) * 16}px`,
+  fontWeight, ...(s["letter-spacing"] && { letterSpacing: s["letter-spacing"] }), sample, usage: note,
+})
+const dsTokens = {
+  name: "Graphite", version: 1,
+  meta: { source: { kind: "code", repo: "https://github.com/mastalier1997/design-system", file: "tokens.json" } },
+  color: {
+    themes: [{ id: "light", name: "Light" }, { id: "dark", name: "Dark" }],
+    tokens: colorNames.map((name) => ({ name, value: { light: t.light[name], dark: t.dark[name] }, usage: usage[name] })),
+  },
+  type: {
+    fonts: [],
+    families: { sans: t.font.sans },
+    groups: [
+      { name: "Headings", family: "sans", styles: [
+        style("display", t.text.display, 700, "Choose your split", "Screen title, one per screen (Tailwind: text-display)."),
+        style("h2", t.text.h2, 600, "Push day · 5 exercises", "Section headers, card titles that lead (text-h2)."),
+      ] },
+      { name: "Text", family: "sans", styles: [
+        style("body", t.text.body, 400, "Body text for inputs and descriptions.", "Default copy and input text (text-body). Inputs stay 16px so iOS doesn't zoom."),
+        style("body-medium", t.text.body, 500, "Romanian deadlift", "Card titles, list item names."),
+        { name: "ui", fontSize: "14px", lineHeight: "20px", fontWeight: 500, sample: "Start workout", usage: "Button and tab labels: shadcn's text-sm font-medium." },
+        style("label", t.text.label, 600, "HAMSTRINGS", "Tags and small labels, always uppercase (text-label uppercase)."),
+        style("caption", t.text.caption, 400, "Last time 60 kg", "Captions, helper text, metadata. 13px is the floor for any UI text."),
+      ] },
+    ],
+  },
+  spacing: { tokens: [
+    ["space-1", "4px", "Icon-to-label gaps inside small controls."], ["space-2", "8px", "Gap between chips, inline items."],
+    ["space-3", "12px", "Gap between stacked cards."], ["space-4", "16px", "Screen side padding on phones; card padding."],
+    ["space-6", "24px", "Card padding (roomy); screen padding from sm up."], ["space-8", "32px", "Space between major sections."],
+    ["space-12", "48px", "Large section breaks."], ["space-16", "64px", "Page-level top/bottom space."],
+  ].map(([name, value, u]) => ({ name, value, usage: `${u} Tailwind's 4px scale.` })) },
+  radius: { tokens: [
+    { name: "radius-sm", value: "6px", usage: "Badges, checkboxes (rounded-sm)." },
+    { name: "radius-md", value: "8px", usage: "Buttons, inputs, tags (rounded-md)." },
+    { name: "radius-lg", value: `${parseFloat(t.radius) * 16}px`, usage: "Base --radius: tab lists, alerts (rounded-lg)." },
+    { name: "radius-xl", value: "14px", usage: "Cards, sheets, dialogs (rounded-xl)." },
+    { name: "radius-full", value: "9999px", usage: "Pills, switches, progress bars, avatars." },
+  ] },
+  size: { tokens: [
+    { name: "control-touch", value: "44px", usage: "Minimum height (and width) of buttons, inputs, selects and tab triggers on touch screens." },
+    { name: "content-max", value: "448px", usage: "Max width of the single app column (max-w-md)." },
+  ] },
+}
+writeFileSync("claude-design/tokens.json", JSON.stringify(dsTokens, null, 2) + "\n")
+console.log("ok: wrote claude-design/tokens.json")
