@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "graphite-svelte-dark-mode",
+  "type": "registry:component",
+  "title": "Graphite dark mode (SvelteKit)",
+  "description": "mode-watcher based light/dark toggle button.",
+  "dependencies": [
+    "mode-watcher",
+    "@lucide/svelte"
+  ],
+  "registryDependencies": [
+    "button"
+  ],
+  "files": [
+    {
+      "path": "registry/svelte/mode-toggle.svelte",
+      "type": "registry:component",
+      "target": "mode-toggle.svelte",
+      "content": "<script lang=\"ts\">\n  import SunIcon from \"@lucide/svelte/icons/sun\";\n  import MoonIcon from \"@lucide/svelte/icons/moon\";\n  import { toggleMode } from \"mode-watcher\";\n  import { Button } from \"$lib/components/ui/button/index.js\";\n</script>\n\n<Button onclick={toggleMode} variant=\"outline\" size=\"icon\" aria-label=\"Toggle dark mode\">\n  <SunIcon class=\"dark:hidden\" />\n  <MoonIcon class=\"hidden dark:block\" />\n</Button>\n"
+    }
+  ]
+}

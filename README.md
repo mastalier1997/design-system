@@ -1,0 +1,94 @@
+# Graphite design system
+
+A [shadcn/ui](https://ui.shadcn.com/) theme matching the gym app ([mastalier1997/gym](https://github.com/mastalier1997/gym)):
+system font stack, calm graphite surfaces, violet accent. **Light and dark mode are always both defined.**
+Works with Next.js (shadcn) and SvelteKit ([shadcn-svelte](https://shadcn-svelte.com/)).
+
+Visual reference (canvas): https://claude.ai/artifact/DibPKKh5Ck2d7FqDVzzQEW
+
+## Install in a project
+
+Registry base URL: `https://raw.githubusercontent.com/mastalier1997/design-system/main/public/r`
+
+### Next.js
+
+```bash
+npx shadcn@latest init
+npx shadcn@latest add https://raw.githubusercontent.com/mastalier1997/design-system/main/public/r/graphite.json https://raw.githubusercontent.com/mastalier1997/design-system/main/public/r/graphite-next-dark-mode.json
+```
+
+Wrap the app in `app/layout.tsx` and drop the Geist font imports (Graphite uses the system font):
+
+```tsx
+<html lang="en" suppressHydrationWarning>
+  <body>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      {children}
+    </ThemeProvider>
+  </body>
+</html>
+```
+
+Put `<ModeToggle />` (from `@/components/mode-toggle`) wherever the switch belongs.
+
+### SvelteKit
+
+```bash
+npx shadcn-svelte@latest init
+npx shadcn-svelte@latest add https://raw.githubusercontent.com/mastalier1997/design-system/main/public/r/graphite.json https://raw.githubusercontent.com/mastalier1997/design-system/main/public/r/graphite-svelte-dark-mode.json
+```
+
+In `src/routes/+layout.svelte` add `import { ModeWatcher } from "mode-watcher"` and render `<ModeWatcher />` above `{@render children()}`.
+Use `<ModeToggle />` from `$lib/components/mode-toggle.svelte`.
+
+**SvelteKit 3:** it removed the `$lib` alias, which shadcn-svelte (1.7) still uses. Before `init`, add
+`alias: { '$lib': 'src/lib' }` to the `sveltekit({...})` options in `vite.config.ts`, and
+`"paths": { "$lib": ["./src/lib"], "$lib/*": ["./src/lib/*"] }` to `compilerOptions` in `tsconfig.json`.
+
+### Then
+
+Add any components you need from shadcn (`npx shadcn@latest add card tabs …` / `npx shadcn-svelte@latest add …`).
+Don't hand-roll buttons, inputs, cards, etc.
+
+## What the theme sets
+
+- All shadcn colour variables for `:root` (light) and `.dark`, plus `success`, charts and sidebar
+- System font stack as `font-sans`; type scale utilities `text-display`, `text-h2`, `text-body`, `text-label`, `text-caption` (use `uppercase` with `text-label`)
+- Radius 10px base (sm 6, md 8, lg 10, xl 14)
+- On touch screens: buttons, inputs, select and tab triggers are at least 44×44px
+- `color-scheme` per mode and reduced-motion support
+
+## Changing the system
+
+`tokens.json` is the only source. After editing it:
+
+```bash
+node build.mjs
+```
+
+This fails if any text pair drops below WCAG AA (4.5:1, or 3:1 for input borders and the focus ring) in either mode.
+Otherwise it regenerates `globals.css` (for copying by hand) and the registry items in `public/r/`. Commit both, then push.
+The canvas boards in `canvas/` are updated separately.
+
+## Check a project
+
+`e2e/graphite.spec.ts` is a Playwright test for any app using Graphite. Its page needs the mode toggle, one Button and one Input.
+It checks the colours in both modes, that the choice persists, the system-dark default and the 44px touch targets.
+
+```bash
+E2E_URL=http://localhost:3000 E2E_PATH=/ npx playwright test -c e2e
+```
+
+Copy the whole `e2e` folder into a project that has `@playwright/test` installed. `E2E_PATH` is the page with the toggle, Button and Input (default `/`).
+
+## Accent presets
+
+`tokens.json` → `accentPresets` lists the 11 accent colours the gym app lets users pick from. They're reference only: they aren't
+in the theme or the contrast check, because the app adjusts the picked colour per mode before using it.
+
+## Rules
+
+- One primary (accent-filled) action per screen; the accent is for action and emphasis, never decoration.
+- Focus ring = `ring` colour, visible on `:focus-visible` only.
+- Never use colour as the only signal; pair it with text or an icon.
+- Status: `destructive` for errors, `success` for confirmation.
